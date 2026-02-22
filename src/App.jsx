@@ -391,10 +391,11 @@ function App() {
       const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
       dayKeys.forEach(dayKey => {
         const storageKey = `workout_${selectedWeek}_${dayKey}`
-        loaded[dayKey] = localStorage.getItem(storageKey) === 'true'
+        const value = localStorage.getItem(storageKey)
+        loaded[dayKey] = value === 'true'
       })
       setCheckedDays(loaded)
-    } else {
+    } else if (!selectedWeek) {
       setCheckedDays({})
     }
   }, [selectedWeek, currentPage])
@@ -485,7 +486,10 @@ function App() {
                 
                 <div className="week-details">
                   {days.map((day, index) => {
-                    const isChecked = checkedDays[day.key] || false
+                    // Always read from localStorage as source of truth, with state as fallback
+                    const storageKey = `workout_${selectedWeek}_${day.key}`
+                    const storedValue = localStorage.getItem(storageKey)
+                    const isChecked = storedValue === 'true' || checkedDays[day.key] === true
                     
                     return (
                       <div key={index} className="day-item">
