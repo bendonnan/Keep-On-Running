@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supabase } from './supabaseClient'
 
 const DEFAULT_DEVICE_LABELS = ['Ben iPhone', 'Wife Android']
 
@@ -384,21 +385,111 @@ function App() {
     window.open(website, '_blank', 'noopener,noreferrer')
   }
 
-  // Load checked days from localStorage when week is selected
+  // Load checked days from Supabase when week is selected
   useEffect(() => {
-    if (selectedWeek && currentPage === 'Running Schedule') {
+    if (selectedWeek && currentPage === 'Running Schedule' && deviceLabel) {
+      loadCheckboxStates(selectedWeek)
+    } else if (!selectedWeek) {
+      setCheckedDays({})
+    }
+  }, [selectedWeek, currentPage, deviceLabel])
+
+  const loadCheckboxStates = async (weekKey) => {
+    if (!isOnline) {
+      // Fallback to localStorage when offline
       const loaded = {}
       const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
       dayKeys.forEach(dayKey => {
-        const storageKey = `workout_${selectedWeek}_${dayKey}`
+        const storageKey = `workout_${weekKey}_${dayKey}`
         const value = localStorage.getItem(storageKey)
         loaded[dayKey] = value === 'true'
       })
       setCheckedDays(loaded)
-    } else if (!selectedWeek) {
-      setCheckedDays({})
+      return
     }
-  }, [selectedWeek, currentPage])
+
+    try {
+      const { data, error } = await supabase
+        .from('workout_checkboxes')
+        .select('day_key, checked')
+        .eq('week_key', weekKey)
+
+      if (error) {
+        console.error('Error loading checkboxes:', error)
+        // Fallback to localStorage
+        const loaded = {}
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        dayKeys.forEach(dayKey => {
+          const storageKey = `workout_${weekKey}_${dayKey}`
+          const value = localStorage.getItem(storageKey)
+          loaded[dayKey] = value === 'true'
+        })
+        setCheckedDays(loaded)
+        return
+      }
+
+      const loaded = {}
+      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      dayKeys.forEach(dayKey => {
+        const dbEntry = data?.find(item => item.day_key === dayKey)
+        loaded[dayKey] = dbEntry?.checked === true
+        // Also sync to localStorage as backup
+        const storageKey = `workout_${weekKey}_${dayKey}`
+        if (dbEntry?.checked !== undefined) {
+          localStorage.setItem(storageKey, dbEntry.checked.toString())
+        }
+      })
+      setCheckedDays(loaded)
+    } catch (err) {
+      console.error('Error loading checkboxes:', err)
+      // Fallback to localStorage
+      const loaded = {}
+      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      dayKeys.forEach(dayKey => {
+        const storageKey = `workout_${weekKey}_${dayKey}`
+        const value = localStorage.getItem(storageKey)
+        loaded[dayKey] = value === 'true'
+      })
+      setCheckedDays(loaded)
+    }
+  }
+
+  const saveCheckboxState = async (weekKey, dayKey, checked) => {
+    // Update local state immediately
+    setCheckedDays(prev => ({
+      ...prev,
+      [dayKey]: checked
+    }))
+
+    // Save to localStorage as backup
+    const storageKey = `workout_${weekKey}_${dayKey}`
+    localStorage.setItem(storageKey, checked.toString())
+
+    // Save to Supabase if online
+    if (!isOnline || !deviceLabel) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('workout_checkboxes')
+        .upsert({
+          week_key: weekKey,
+          day_key: dayKey,
+          checked: checked,
+          updated_by: deviceLabel,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'week_key,day_key'
+        })
+
+      if (error) {
+        console.error('Error saving checkbox:', error)
+      }
+    } catch (err) {
+      console.error('Error saving checkbox:', err)
+    }
+  }
 
   if (showLabelPrompt) {
     return (
@@ -462,13 +553,8 @@ function App() {
         ]
         
         const handleDayCheck = (dayKey) => {
-          const storageKey = `workout_${selectedWeek}_${dayKey}`
           const newValue = !checkedDays[dayKey]
-          localStorage.setItem(storageKey, newValue.toString())
-          setCheckedDays(prev => ({
-            ...prev,
-            [dayKey]: newValue
-          }))
+          saveCheckboxState(selectedWeek, dayKey, newValue)
         }
         
         return (
@@ -486,10 +572,8 @@ function App() {
                 
                 <div className="week-details">
                   {days.map((day, index) => {
-                    // Always read from localStorage as source of truth, with state as fallback
-                    const storageKey = `workout_${selectedWeek}_${day.key}`
-                    const storedValue = localStorage.getItem(storageKey)
-                    const isChecked = storedValue === 'true' || checkedDays[day.key] === true
+                    // Use state (which is loaded from Supabase) as source of truth
+                    const isChecked = checkedDays[day.key] === true
                     
                     return (
                       <div key={index} className="day-item">
