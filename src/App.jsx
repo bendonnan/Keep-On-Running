@@ -372,7 +372,8 @@ function App() {
   }
 
   const handleMenuClick = (menuItem) => {
-    setCurrentPage(menuItem)
+    // Refresh the app first, then navigate
+    window.location.reload()
   }
 
   const handleBackToMain = () => {
