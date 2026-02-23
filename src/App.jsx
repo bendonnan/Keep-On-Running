@@ -400,15 +400,13 @@ function App() {
   }, [selectedWeek, currentPage])
 
   const loadCheckboxStates = async (weekKey) => {
+    setDbError(null)
     if (!isOnline) {
-      setDbError('Cannot load: You are offline. Checkbox states require internet connection.')
-      setCheckedDays({})
+      setDbError('Offline - cannot load')
       return
     }
 
-    setDbError(null)
     try {
-      // Load from app_state table - use training_status column to store JSON checkbox state
       const { data, error } = await supabase
         .from('app_state')
         .select('training_status, updated_at')
@@ -416,8 +414,8 @@ function App() {
         .single()
 
       if (error) {
-        // If row doesn't exist, create it
         if (error.code === 'PGRST116') {
+          // Row doesn't exist, create it
           const { data: newData, error: insertError } = await supabase
             .from('app_state')
             .insert({
@@ -430,84 +428,78 @@ function App() {
             .single()
 
           if (insertError) {
-            setDbError(`Error: ${insertError.message}`)
-            setCheckedDays({})
+            setDbError(`DB Error: ${insertError.message}`)
             return
           }
-
           setCheckedDays({})
           setDbLoadTime(newData.updated_at)
-        } else {
-          setDbError(`Error loading: ${error.message}`)
-          setCheckedDays({})
+          return
         }
+        setDbError(`Load Error: ${error.message}`)
         return
       }
 
-      // Parse checkbox state from training_status JSON
+      // Parse JSON from training_status
+      let checkboxData = {}
       try {
-        const checkboxData = JSON.parse(data.training_status || '{}')
-        const weekState = checkboxData[weekKey] || {}
-        setCheckedDays(weekState)
-        setDbLoadTime(data.updated_at)
-      } catch (parseError) {
-        // If not valid JSON, start fresh
-        setCheckedDays({})
-        setDbLoadTime(data.updated_at)
+        const status = data.training_status || '{}'
+        checkboxData = typeof status === 'string' ? JSON.parse(status) : status
+      } catch (e) {
+        checkboxData = {}
       }
+
+      const weekState = checkboxData[weekKey] || {}
+      setCheckedDays(weekState)
+      setDbLoadTime(data.updated_at)
     } catch (err) {
-      setDbError(`Error loading: ${err.message}`)
-      setCheckedDays({})
-      console.error('Error loading checkboxes:', err)
+      setDbError(`Error: ${err.message}`)
+      console.error('Load error:', err)
     }
   }
 
   const saveCheckboxState = async (weekKey, dayKey, checked) => {
-    if (!isOnline) {
-      setDbError('Cannot save: You are offline. Checkbox states require internet connection.')
-      return
-    }
-
-    // Update local state immediately for UI responsiveness
+    // Update UI immediately - don't revert on error
     setCheckedDays(prev => ({
       ...prev,
       [dayKey]: checked
     }))
 
+    if (!isOnline) {
+      setDbError('Offline - changes not saved')
+      return
+    }
+
     setDbError(null)
     try {
-      // Fetch current state
-      const { data: currentData, error: fetchError } = await supabase
+      // Get current state
+      const { data: current, error: fetchErr } = await supabase
         .from('app_state')
         .select('training_status')
         .eq('id', 1)
         .single()
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        setDbError(`Error fetching: ${fetchError.message}`)
-        setCheckedDays(prev => ({
-          ...prev,
-          [dayKey]: !checked
-        }))
+      if (fetchErr && fetchErr.code !== 'PGRST116') {
+        setDbError(`Fetch Error: ${fetchErr.message}`)
         return
       }
 
-      // Parse current checkbox data
+      // Parse existing data
       let checkboxData = {}
       try {
-        checkboxData = JSON.parse(currentData?.training_status || '{}')
+        const status = current?.training_status || '{}'
+        checkboxData = typeof status === 'string' ? JSON.parse(status) : status
       } catch (e) {
         checkboxData = {}
       }
 
-      // Update checkbox state for this week
-      checkboxData[weekKey] = {
-        ...checkboxData[weekKey],
-        [dayKey]: checked
+      // Update this week's checkbox
+      if (!checkboxData[weekKey]) {
+        checkboxData[weekKey] = {}
       }
+      checkboxData[weekKey][dayKey] = checked
 
-      // Save back to database
-      const { data: savedData, error: saveError } = await supabase
+      // Save to DB
+      const { data: saved, error: saveErr } = await supabase
         .from('app_state')
         .upsert({
           id: 1,
@@ -520,42 +512,34 @@ function App() {
         .select('updated_at')
         .single()
 
-      if (saveError) {
-        setDbError(`Error saving: ${saveError.message}`)
-        setCheckedDays(prev => ({
-          ...prev,
-          [dayKey]: !checked
-        }))
+      if (saveErr) {
+        setDbError(`Save Error: ${saveErr.message}`)
         return
       }
 
-      // Success
-      setDbSaveTime(savedData.updated_at)
+      setDbSaveTime(saved.updated_at)
       
-      // Re-fetch to confirm
-      const { data: confirmData } = await supabase
+      // Re-fetch to sync with other devices
+      const { data: confirm } = await supabase
         .from('app_state')
         .select('training_status, updated_at')
         .eq('id', 1)
         .single()
 
-      if (confirmData) {
+      if (confirm) {
         try {
-          const confirmedCheckboxData = JSON.parse(confirmData.training_status || '{}')
-          const confirmedWeekState = confirmedCheckboxData[weekKey] || {}
-          setCheckedDays(confirmedWeekState)
-          setDbLoadTime(confirmData.updated_at)
+          const status = confirm.training_status || '{}'
+          const confirmedData = typeof status === 'string' ? JSON.parse(status) : status
+          const confirmedWeek = confirmedData[weekKey] || {}
+          setCheckedDays(confirmedWeek)
+          setDbLoadTime(confirm.updated_at)
         } catch (e) {
-          setCheckedDays({})
+          // Keep current state
         }
       }
     } catch (err) {
-      setDbError(`Error saving: ${err.message}`)
-      setCheckedDays(prev => ({
-        ...prev,
-        [dayKey]: !checked
-      }))
-      console.error('Error saving checkbox:', err)
+      setDbError(`Error: ${err.message}`)
+      console.error('Save error:', err)
     }
   }
 
