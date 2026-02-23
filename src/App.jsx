@@ -46,217 +46,217 @@ const FUN_RUNS = [
   }
 ]
 
-// Week training data
+// Week training data - grouped by week starting Monday
 const WEEK_TRAINING_DATA = {
   'Feb 23': {
-    monday: 'Easy 35 min (Zone 2)',
-    tuesday: 'Strength',
-    wednesday: 'Light intervals 4x400m @ 5K pace (reduced volume)',
-    thursday: 'Light strength',
-    friday: 'Easy 30 min',
-    saturday: 'Rest',
-    sunday: 'Mar 1 – River Run 5K @ Aerobic (Category C)',
-    notes: 'C Race – Training stimulus'
+    monday: 'Monday 23 Feb 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 24 Feb 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 25 Feb 2026 - Intervals: 6×400m @ 4:55/km\nRecovery: 90 sec easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 26 Feb 2026 - Gym Strength 2',
+    friday: 'Friday 27 Feb 2026 - Tempo: 3km @ 5:25/km (HR 165–175)',
+    saturday: 'Saturday 28 Feb 2026 - Long Run: 9km easy (HR cap 150)',
+    sunday: 'Sunday 01 Mar 2026 - RACE: River Run Geelong 5km (HR 165–175 controlled)',
+    notes: ''
   },
   'Mar 2': {
-    monday: 'Recovery 30 min',
-    tuesday: 'Strength (moderate)',
-    wednesday: 'Mar 4 – Sunset Series 3.8K @ Aerobic (Category C)',
-    thursday: 'Swim / Rest',
-    friday: 'Easy 35 min',
-    saturday: 'Rest',
-    sunday: 'Long Run 8 km easy',
-    notes: 'Aerobic focus'
+    monday: 'Monday 02 Mar 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 03 Mar 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 04 Mar 2026 - RACE: Sunset Series – The Tan 3.8km (HR 165–175 controlled)',
+    thursday: 'Thursday 05 Mar 2026 - Gym Strength 2',
+    friday: 'Friday 06 Mar 2026 - Tempo: 3km @ 5:25/km (HR 165–175)',
+    saturday: 'Saturday 07 Mar 2026 - Long Run: 10km easy (HR cap 150)',
+    sunday: 'Sunday 08 Mar 2026 - Gym Recovery',
+    notes: ''
   },
   'Mar 9': {
-    monday: 'Easy 40 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 6x400m @ 5K pace',
-    thursday: 'Strength',
-    friday: 'Tempo 35 min (controlled)',
-    saturday: 'Rest',
-    sunday: 'Long Run 9 km easy',
-    notes: 'Build week'
+    monday: 'Monday 09 Mar 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 10 Mar 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 11 Mar 2026 - Intervals: 5×800m @ 5:00/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 12 Mar 2026 - Gym Strength 2',
+    friday: 'Friday 13 Mar 2026 - Tempo: 4km @ 5:20/km (HR 165–175)',
+    saturday: 'Saturday 14 Mar 2026 - Long Run: 10km easy (HR cap 150)',
+    sunday: 'Sunday 15 Mar 2026 - Gym Recovery',
+    notes: ''
   },
   'Mar 16': {
-    monday: 'Easy 35 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 5x600m @ slightly faster than 5K',
-    thursday: 'Strength',
-    friday: 'Easy 30 min',
-    saturday: 'Rest',
-    sunday: 'Long Run 9 km',
-    notes: 'Build week'
+    monday: 'Monday 16 Mar 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 17 Mar 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 18 Mar 2026 - Intervals: 6×800m @ 5:00/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 19 Mar 2026 - Gym Strength 2',
+    friday: 'Friday 20 Mar 2026 - Tempo: 4km @ 5:20/km (HR 165–175)',
+    saturday: 'Saturday 21 Mar 2026 - Long Run: 11km easy (HR cap 150)',
+    sunday: 'Sunday 22 Mar 2026 - Gym Recovery',
+    notes: ''
   },
   'Mar 23': {
-    monday: 'Easy 30 min',
-    tuesday: 'Light strength',
-    wednesday: 'Light intervals 4x400m',
-    thursday: 'Light strength',
-    friday: 'Easy 25 min',
-    saturday: 'Rest',
-    sunday: 'Mar 29 – 5K @ 90–95% (Category B)',
-    notes: 'B Race'
+    monday: 'Monday 23 Mar 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 24 Mar 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 25 Mar 2026 - Intervals: 4×1km @ 5:05/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 26 Mar 2026 - Gym Strength 2',
+    friday: 'Friday 27 Mar 2026 - Tempo: 3km light (HR 165–175)',
+    saturday: 'Saturday 28 Mar 2026 - Gym Recovery',
+    sunday: 'Sunday 29 Mar 2026 - RACE: Run For The Kids 5km (HR 165–175 controlled)',
+    notes: ''
   },
   'Mar 30': {
-    monday: 'Recovery 30 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 6x400m',
-    thursday: 'Strength',
-    friday: 'Tempo 35 min',
-    saturday: 'Rest',
-    sunday: 'Long Run 10 km',
-    notes: 'Resume build'
+    monday: 'Monday 30 Mar 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 31 Mar 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 01 Apr 2026 - Intervals: 5×1km @ 5:00/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 02 Apr 2026 - Gym Strength 2',
+    friday: 'Friday 03 Apr 2026 - Tempo: 4km @ 5:15/km (HR 165–175)',
+    saturday: 'Saturday 04 Apr 2026 - Long Run: 11km easy (HR cap 150)',
+    sunday: 'Sunday 05 Apr 2026 - Gym Recovery',
+    notes: ''
   },
   'Apr 6': {
-    monday: 'Easy 40 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 5x800m @ 5K pace',
-    thursday: 'Strength',
-    friday: 'Easy 30 min',
-    saturday: 'Rest',
-    sunday: 'Apr 12 – 5K Aerobic (Category C)',
-    notes: 'C Race'
+    monday: 'Monday 06 Apr 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 07 Apr 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 08 Apr 2026 - Intervals: 4×400m @ 4:50/km\nRecovery: 90 sec easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 09 Apr 2026 - Gym Strength 2',
+    friday: 'Friday 10 Apr 2026 - Tempo: 20 min jog (HR 165–175)',
+    saturday: 'Saturday 11 Apr 2026 - Gym Recovery',
+    sunday: 'Sunday 12 Apr 2026 - RACE: Gumbaya World 5km (TEST – full effort)',
+    notes: ''
   },
   'Apr 13': {
-    monday: 'Easy 35 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 6x400m',
-    thursday: 'Strength',
-    friday: 'Tempo 35 min',
-    saturday: 'Rest',
-    sunday: 'Long Run 10 km',
-    notes: 'Build week'
+    monday: 'Monday 13 Apr 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 14 Apr 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 15 Apr 2026 - Intervals: 6×1km @ 4:55/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 16 Apr 2026 - Gym Strength 2',
+    friday: 'Friday 17 Apr 2026 - Tempo: 4km @ 5:15/km (HR 165–175)',
+    saturday: 'Saturday 18 Apr 2026 - Long Run: 12km easy (HR cap 150)',
+    sunday: 'Sunday 19 Apr 2026 - Gym Recovery',
+    notes: ''
   },
   'Apr 20': {
-    monday: 'Easy 30 min',
-    tuesday: 'Light strength',
-    wednesday: 'Light intervals 4x400m',
-    thursday: 'Light strength',
-    friday: 'Easy 25 min',
-    saturday: 'Rest',
-    sunday: 'Apr 26 – 3.8K @ 90% (Category B)',
-    notes: 'B Race'
+    monday: 'Monday 20 Apr 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 21 Apr 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 22 Apr 2026 - Intervals: 4×1200m @ 5:00/km\nRecovery: 2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 23 Apr 2026 - Gym Strength 2',
+    friday: 'Friday 24 Apr 2026 - Tempo: 5km @ 5:15/km (HR 165–175)',
+    saturday: 'Saturday 25 Apr 2026 - Gym Recovery',
+    sunday: 'Sunday 26 Apr 2026 - RACE: Run The Tan 3.8km (HR 165–175 controlled)',
+    notes: ''
   },
   'Apr 27': {
-    monday: 'Recovery 30 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 5x600m',
-    thursday: 'Strength',
-    friday: 'Tempo 35 min',
-    saturday: 'Rest',
-    sunday: 'Long Run 11 km',
-    notes: 'Build week'
+    monday: 'Monday 27 Apr 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 28 Apr 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 29 Apr 2026 - Intervals: 5×1km @ 4:55/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 30 Apr 2026 - Gym Strength 2',
+    friday: 'Friday 01 May 2026 - Tempo: 5km @ 5:10/km (HR 165–175)',
+    saturday: 'Saturday 02 May 2026 - Long Run: 13km easy (HR cap 150)',
+    sunday: 'Sunday 03 May 2026 - Gym Recovery',
+    notes: ''
   },
   'May 4': {
-    monday: 'Easy 30 min',
-    tuesday: 'Light strength',
-    wednesday: 'Light intervals 4x400m',
-    thursday: 'Light strength',
-    friday: 'Easy 25 min',
-    saturday: 'Rest',
-    sunday: 'May 10 – 4K @ 90% (Category B)',
-    notes: 'B Race'
+    monday: 'Monday 04 May 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 05 May 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 06 May 2026 - Intervals: 3×1600m @ 5:05/km\nRecovery: 3 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 07 May 2026 - Gym Strength 2',
+    friday: 'Friday 08 May 2026 - Tempo: 4km steady (HR 165–175)',
+    saturday: 'Saturday 09 May 2026 - Gym Recovery',
+    sunday: 'Sunday 10 May 2026 - RACE: Mother\'s Day Classic 4km (HR 165–175 controlled)',
+    notes: ''
   },
   'May 11': {
-    monday: 'Recovery 30 min',
-    tuesday: 'Strength',
-    wednesday: 'Easy 30 min',
-    thursday: 'Light strength',
-    friday: 'Easy 25 min',
-    saturday: 'Rest',
-    sunday: 'May 17 – 10K @ 85% (Category C aerobic)',
-    notes: 'C Race – Aerobic Builder'
+    monday: 'Monday 11 May 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 12 May 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 13 May 2026 - Intervals: 6×800m @ 4:50/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 14 May 2026 - Gym Strength 2',
+    friday: 'Friday 15 May 2026 - Tempo: 4km @ 5:10/km (HR 165–175)',
+    saturday: 'Saturday 16 May 2026 - Gym Recovery',
+    sunday: 'Sunday 17 May 2026 - RACE: Memory Run 10km (HR 160–170 steady build)',
+    notes: ''
   },
   'May 18': {
-    monday: 'Easy 40 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 6x800m @ 5K pace',
-    thursday: 'Strength',
-    friday: 'Tempo 40 min steady',
-    saturday: 'Rest',
-    sunday: 'Long Run 11 km',
-    notes: 'Build 1'
+    monday: 'Monday 18 May 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 19 May 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 20 May 2026 - Intervals: 5×1km @ 4:55/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 21 May 2026 - Gym Strength 2',
+    friday: 'Friday 22 May 2026 - Tempo: 5km @ 5:10/km (HR 165–175)',
+    saturday: 'Saturday 23 May 2026 - Long Run: 14km easy (HR cap 150)',
+    sunday: 'Sunday 24 May 2026 - Gym Recovery',
+    notes: ''
   },
   'May 25': {
-    monday: 'Easy 40 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 5x1km @ slightly faster than 5K',
-    thursday: 'Strength',
-    friday: 'Tempo 40 min (last 10 min strong)',
-    saturday: 'Rest',
-    sunday: 'Long Run 12 km',
-    notes: 'Build 2 – volume increase'
+    monday: 'Monday 25 May 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 26 May 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 27 May 2026 - Intervals: 4×1600m @ 5:00/km\nRecovery: 3 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 28 May 2026 - Gym Strength 2',
+    friday: 'Friday 29 May 2026 - Tempo: 5km @ 5:10/km (HR 165–175)',
+    saturday: 'Saturday 30 May 2026 - Long Run: 14km easy (HR cap 150)',
+    sunday: 'Sunday 31 May 2026 - Gym Recovery',
+    notes: ''
   },
   'June 1': {
-    monday: 'Easy 45 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 6x1km @ 5K pace (90 sec rest)',
-    thursday: 'Strength',
-    friday: 'Tempo 45 min steady',
-    saturday: 'Rest',
-    sunday: 'Long Run 12 km (last 2 km moderate)',
-    notes: 'Peak aerobic load'
+    monday: 'Monday 01 Jun 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 02 Jun 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 03 Jun 2026 - Intervals: 6×1km @ 4:55/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 04 Jun 2026 - Gym Strength 2',
+    friday: 'Friday 05 Jun 2026 - Tempo: 5km @ 5:05/km (HR 165–175)',
+    saturday: 'Saturday 06 Jun 2026 - Long Run: 13km easy (HR cap 150)',
+    sunday: 'Sunday 07 Jun 2026 - Gym Recovery',
+    notes: ''
   },
   'June 8': {
-    monday: 'Easy 40 min',
-    tuesday: 'Light strength',
-    wednesday: 'Intervals 4x1.2km @ 5K pace',
-    thursday: 'Strength',
-    friday: 'Tempo 40 min steady',
-    saturday: 'Rest',
-    sunday: 'Long Run 10 km',
-    notes: 'Consolidation week'
+    monday: 'Monday 08 Jun 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 09 Jun 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 10 Jun 2026 - Intervals: 6×800m @ 4:45–4:50/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 11 Jun 2026 - Gym Strength 2',
+    friday: 'Friday 12 Jun 2026 - Tempo: 4km @ 5:05/km (HR 165–175)',
+    saturday: 'Saturday 13 Jun 2026 - Long Run: 14km easy (HR cap 150)',
+    sunday: 'Sunday 14 Jun 2026 - Gym Recovery',
+    notes: ''
   },
   'June 15': {
-    monday: 'Easy 45 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 5x1km @ faster than 5K pace',
-    thursday: 'Strength',
-    friday: 'Tempo 35 min controlled',
-    saturday: 'Rest',
-    sunday: 'Long Run 11 km',
-    notes: 'Sharpening phase'
+    monday: 'Monday 15 Jun 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 16 Jun 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 17 Jun 2026 - Intervals: 5×1km @ 4:55/km\nRecovery: 2–2:30 easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 18 Jun 2026 - Gym Strength 2',
+    friday: 'Friday 19 Jun 2026 - Tempo: 5km @ 5:05/km (HR 165–175)',
+    saturday: 'Saturday 20 Jun 2026 - Long Run: 13km easy (HR cap 150)',
+    sunday: 'Sunday 21 Jun 2026 - Gym Recovery',
+    notes: ''
   },
   'June 22': {
-    monday: 'Easy 40 min',
-    tuesday: 'Strength',
-    wednesday: 'Intervals 4x1km @ 5K pace (controlled)',
-    thursday: 'Strength',
-    friday: 'Tempo 30 min steady',
-    saturday: 'Rest',
-    sunday: 'Long Run 10 km easy',
-    notes: 'Deload week – absorb gains'
+    monday: 'Monday 22 Jun 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 23 Jun 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 24 Jun 2026 - Intervals: 3×2km @ 5:05/km\nRecovery: 3 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 25 Jun 2026 - Gym Strength 2',
+    friday: 'Friday 26 Jun 2026 - Tempo: 4km steady (HR 165–175)',
+    saturday: 'Saturday 27 Jun 2026 - Long Run: 12km easy (HR cap 150)',
+    sunday: 'Sunday 28 Jun 2026 - Gym Recovery',
+    notes: ''
   },
   'June 29': {
-    monday: 'Easy 35 min',
-    tuesday: 'Light strength',
-    wednesday: 'Intervals 4x800m sharp (not max)',
-    thursday: 'Strength',
-    friday: 'Tempo 30 min controlled',
-    saturday: 'Rest',
-    sunday: 'Long Run 9 km easy',
-    notes: 'Pre-taper reduction'
+    monday: 'Monday 29 Jun 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 30 Jun 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 01 Jul 2026 - Intervals: 6×800m @ 4:50/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 02 Jul 2026 - Gym Strength 2',
+    friday: 'Friday 03 Jul 2026 - Tempo: 4km @ 5:05/km (HR 165–175)',
+    saturday: 'Saturday 04 Jul 2026 - Long Run: 12km easy (HR cap 150)',
+    sunday: 'Sunday 05 Jul 2026 - Gym Recovery',
+    notes: ''
   },
   'July 6': {
-    monday: 'Easy 35 min',
-    tuesday: 'Light strength',
-    wednesday: 'Intervals 3x800m @ race pace',
-    thursday: 'Rest',
-    friday: 'Easy 25 min with 4 strides',
-    saturday: 'Rest',
-    sunday: 'Long Run 8 km easy',
-    notes: 'Taper begins'
+    monday: 'Monday 06 Jul 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 07 Jul 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 08 Jul 2026 - Intervals: 4×1km @ 4:55/km\nRecovery: 2 min easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 09 Jul 2026 - Gym Strength 2',
+    friday: 'Friday 10 Jul 2026 - Tempo: 3km @ 5:05/km (HR 165–175)',
+    saturday: 'Saturday 11 Jul 2026 - Long Run: 10km easy (HR cap 150)',
+    sunday: 'Sunday 12 Jul 2026 - Gym Recovery',
+    notes: ''
   },
   'July 13': {
-    monday: 'Easy 30 min',
-    tuesday: 'Light strength',
-    wednesday: '4x400m sharp with full recovery',
-    thursday: 'Rest',
-    friday: 'Easy 20 min',
-    saturday: 'Rest',
-    sunday: 'July 19 – Run Melbourne 5.5K (Category A)',
-    notes: 'A Race – Full Effort'
+    monday: 'Monday 13 Jul 2026 - Easy 35–40 min @ 6:20–6:45 (HR cap 145)',
+    tuesday: 'Tuesday 14 Jul 2026 - Gym Strength 1',
+    wednesday: 'Wednesday 15 Jul 2026 - Intervals: 4×400m @ 4:45/km\nRecovery: 90 sec easy jog recovery (HR drops to ~140–150 before next rep)',
+    thursday: 'Thursday 16 Jul 2026 - Gym Strength 2',
+    friday: 'Friday 17 Jul 2026 - Tempo: 20 min jog (HR 165–175)',
+    saturday: 'Saturday 18 Jul 2026 - Gym Recovery',
+    sunday: 'Sunday 19 Jul 2026 - RACE: Run Melbourne 5.5km (GOAL – full effort)',
+    notes: ''
   }
 }
 
@@ -644,10 +644,11 @@ function App() {
                           checked={isChecked}
                           onChange={() => handleDayCheck(day.key)}
                         />
-                        <span className="day-name">{day.name}</span>
-                        <span className={`day-detail ${isChecked ? 'completed' : ''}`}>
-                          - {day.detail}
-                        </span>
+                        <div className="day-content">
+                          <span className={`day-detail ${isChecked ? 'completed' : ''}`}>
+                            {day.detail}
+                          </span>
+                        </div>
                       </div>
                     )
                   })}
