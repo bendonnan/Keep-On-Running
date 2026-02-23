@@ -408,100 +408,38 @@ function App() {
 
     setDbError(null)
     try {
-      // Try to fetch the single row (id=1)
+      // Load from existing workout_checkboxes table
       const { data, error } = await supabase
-        .from('training_state')
-        .select('state, updated_at')
-        .eq('id', 1)
-        .single()
+        .from('workout_checkboxes')
+        .select('day_key, checked, updated_at')
+        .eq('week_key', weekKey)
+        .order('updated_at', { ascending: false })
 
       if (error) {
-        // If table doesn't exist, show helpful error with SQL
-        if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
-          const sqlCode = `CREATE TABLE IF NOT EXISTS public.training_state (
-  id INTEGER PRIMARY KEY,
-  state JSONB NOT NULL DEFAULT '{}'::jsonb,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-ALTER TABLE public.training_state ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow anonymous read for id=1"
-ON public.training_state FOR SELECT TO anon USING (id = 1);
-
-CREATE POLICY "Allow anonymous insert for id=1"
-ON public.training_state FOR INSERT TO anon WITH CHECK (id = 1);
-
-CREATE POLICY "Allow anonymous update for id=1"
-ON public.training_state FOR UPDATE TO anon USING (id = 1) WITH CHECK (id = 1);
-
-INSERT INTO public.training_state (id, state, updated_at)
-VALUES (1, '{}'::jsonb, NOW())
-ON CONFLICT (id) DO NOTHING;`
-          
-          setDbError(`Database table missing. Go to Supabase SQL Editor and run this SQL:\n\n${sqlCode}`)
-          setCheckedDays({})
-          return
-        }
-        
-        // If row doesn't exist, create it with empty state
-        if (error.code === 'PGRST116') {
-          const initialState = {}
-          const { data: newData, error: insertError } = await supabase
-            .from('training_state')
-            .insert({
-              id: 1,
-              state: initialState,
-              updated_at: new Date().toISOString()
-            })
-            .select('state, updated_at')
-            .single()
-
-          if (insertError) {
-            setDbError(`Error creating state: ${insertError.message}`)
-            setCheckedDays({})
-            return
-          }
-
-          setCheckedDays(newData.state[weekKey] || {})
-          setDbLoadTime(newData.updated_at)
-        } else {
-          setDbError(`Error loading: ${error.message}`)
-          setCheckedDays({})
-        }
+        setDbError(`Error loading: ${error.message}`)
+        setCheckedDays({})
         return
       }
 
-      // Extract checkbox state for this week from the JSON
-      const weekState = data.state?.[weekKey] || {}
-      setCheckedDays(weekState)
-      setDbLoadTime(data.updated_at)
-    } catch (err) {
-      if (err.message?.includes('schema cache') || err.message?.includes('does not exist')) {
-        const sqlCode = `CREATE TABLE IF NOT EXISTS public.training_state (
-  id INTEGER PRIMARY KEY,
-  state JSONB NOT NULL DEFAULT '{}'::jsonb,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-ALTER TABLE public.training_state ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow anonymous read for id=1"
-ON public.training_state FOR SELECT TO anon USING (id = 1);
-
-CREATE POLICY "Allow anonymous insert for id=1"
-ON public.training_state FOR INSERT TO anon WITH CHECK (id = 1);
-
-CREATE POLICY "Allow anonymous update for id=1"
-ON public.training_state FOR UPDATE TO anon USING (id = 1) WITH CHECK (id = 1);
-
-INSERT INTO public.training_state (id, state, updated_at)
-VALUES (1, '{}'::jsonb, NOW())
-ON CONFLICT (id) DO NOTHING;`
-        setDbError(`Database table missing. Go to Supabase SQL Editor and run this SQL:\n\n${sqlCode}`)
-      } else {
-        setDbError(`Error loading: ${err.message}`)
+      // Build state object from database results
+      const loaded = {}
+      let latestUpdate = null
+      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      
+      dayKeys.forEach(dayKey => {
+        const dbEntry = data?.find(item => item.day_key === dayKey)
+        loaded[dayKey] = dbEntry?.checked === true
+        if (dbEntry?.updated_at && (!latestUpdate || new Date(dbEntry.updated_at) > new Date(latestUpdate))) {
+          latestUpdate = dbEntry.updated_at
+        }
+      })
+      
+      setCheckedDays(loaded)
+      if (latestUpdate) {
+        setDbLoadTime(latestUpdate)
       }
+    } catch (err) {
+      setDbError(`Error loading: ${err.message}`)
       setCheckedDays({})
       console.error('Error loading checkboxes:', err)
     }
@@ -514,50 +452,24 @@ ON CONFLICT (id) DO NOTHING;`
     }
 
     // Update local state immediately for UI responsiveness
-    const newWeekState = {
-      ...checkedDays,
+    setCheckedDays(prev => ({
+      ...prev,
       [dayKey]: checked
-    }
-    setCheckedDays(newWeekState)
+    }))
 
     setDbError(null)
     try {
-      // Fetch current state
-      const { data: currentData, error: fetchError } = await supabase
-        .from('training_state')
-        .select('state')
-        .eq('id', 1)
-        .single()
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        setDbError(`Error fetching state: ${fetchError.message}`)
-        // Revert local state
-        setCheckedDays(prev => ({
-          ...prev,
-          [dayKey]: !checked
-        }))
-        return
-      }
-
-      // Build new state object
-      const currentState = currentData?.state || {}
-      const newState = {
-        ...currentState,
-        [weekKey]: {
-          ...currentState[weekKey],
-          [dayKey]: checked
-        }
-      }
-
-      // Save entire state to database
+      // Save to existing workout_checkboxes table
       const { data: savedData, error: saveError } = await supabase
-        .from('training_state')
+        .from('workout_checkboxes')
         .upsert({
-          id: 1,
-          state: newState,
+          week_key: weekKey,
+          day_key: dayKey,
+          checked: checked,
+          updated_by: deviceLabel || 'unknown',
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'id'
+          onConflict: 'week_key,day_key'
         })
         .select('updated_at')
         .single()
@@ -577,15 +489,23 @@ ON CONFLICT (id) DO NOTHING;`
       
       // Re-fetch to confirm and get latest state (in case another device updated)
       const { data: confirmData } = await supabase
-        .from('training_state')
-        .select('state, updated_at')
-        .eq('id', 1)
-        .single()
+        .from('workout_checkboxes')
+        .select('day_key, checked, updated_at')
+        .eq('week_key', weekKey)
 
       if (confirmData) {
-        const confirmedWeekState = confirmData.state?.[weekKey] || {}
-        setCheckedDays(confirmedWeekState)
-        setDbLoadTime(confirmData.updated_at)
+        const loaded = {}
+        let latestUpdate = null
+        confirmData.forEach(item => {
+          loaded[item.day_key] = item.checked === true
+          if (item.updated_at && (!latestUpdate || new Date(item.updated_at) > new Date(latestUpdate))) {
+            latestUpdate = item.updated_at
+          }
+        })
+        setCheckedDays(loaded)
+        if (latestUpdate) {
+          setDbLoadTime(latestUpdate)
+        }
       }
     } catch (err) {
       setDbError(`Error saving: ${err.message}`)
