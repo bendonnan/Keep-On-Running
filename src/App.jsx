@@ -54,7 +54,7 @@ const WEEK_TRAINING_DATA = {
     wednesday: 'Wednesday 25 Feb 2026 - Intervals: 6×400m @ 4:55/km\nRecovery: 90 sec easy jog recovery (HR drops to ~140–150 before next rep)',
     thursday: 'Thursday 26 Feb 2026 - Gym Strength 2',
     friday: 'Friday 27 Feb 2026 - Tempo: 3km @ 5:25/km (HR 165–175)',
-    saturday: 'Saturday 28 Feb 2026 - Long Run: 9km easy (HR cap 150)',
+    saturday: 'Saturday 28 Feb 2026 - Gym Recovery',
     sunday: 'Sunday 01 Mar 2026 - RACE: River Run Geelong 5km (HR 165–175 controlled)',
     notes: ''
   },
@@ -329,6 +329,14 @@ function App() {
   const [dbLoadTime, setDbLoadTime] = useState(null)
   const [dbSaveTime, setDbSaveTime] = useState(null)
   const [dbError, setDbError] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [modalType, setModalType] = useState(null) // 'monday', 'saturday', 'race'
+  const [modalDayKey, setModalDayKey] = useState(null)
+  const [modalDayName, setModalDayName] = useState(null)
+  const [distanceKm, setDistanceKm] = useState('')
+  const [timeHours, setTimeHours] = useState('')
+  const [timeMinutes, setTimeMinutes] = useState('')
+  const [timeSeconds, setTimeSeconds] = useState('')
 
   // Initialize device label and check for target page after refresh
   useEffect(() => {
@@ -451,7 +459,17 @@ function App() {
       }
 
       const weekState = checkboxData[weekKey] || {}
-      setCheckedDays(weekState)
+      // Convert to boolean for checked state (handle both old format and new format)
+      const normalizedState = {}
+      Object.keys(weekState).forEach(key => {
+        const value = weekState[key]
+        if (typeof value === 'object' && value !== null) {
+          normalizedState[key] = value.completed === true
+        } else {
+          normalizedState[key] = value === true
+        }
+      })
+      setCheckedDays(normalizedState)
       setDbLoadTime(data.updated_at)
     } catch (err) {
       setDbError(`Error: ${err.message}`)
@@ -459,7 +477,7 @@ function App() {
     }
   }
 
-  const saveCheckboxState = async (weekKey, dayKey, checked) => {
+  const saveCheckboxState = async (weekKey, dayKey, checked, completionData = null) => {
     // Update UI immediately - don't revert on error
     setCheckedDays(prev => ({
       ...prev,
@@ -498,7 +516,15 @@ function App() {
       if (!checkboxData[weekKey]) {
         checkboxData[weekKey] = {}
       }
-      checkboxData[weekKey][dayKey] = checked
+      
+      if (checked) {
+        checkboxData[weekKey][dayKey] = {
+          completed: true,
+          ...(completionData || {})
+        }
+      } else {
+        checkboxData[weekKey][dayKey] = false
+      }
 
       // Save to DB
       const { data: saved, error: saveErr } = await supabase
@@ -606,9 +632,79 @@ function App() {
           { name: 'Sunday', key: 'sunday', detail: trainingData.sunday }
         ]
         
-        const handleDayCheck = (dayKey) => {
-          const newValue = !checkedDays[dayKey]
-          saveCheckboxState(selectedWeek, dayKey, newValue)
+        const handleCompleteClick = (dayName, dayKey, detail) => {
+          const detailLower = detail.toLowerCase()
+          
+          // Check if already completed
+          if (checkedDays[dayKey] === true) {
+            // Uncomplete - just save as false
+            saveCheckboxState(selectedWeek, dayKey, false, null)
+            return
+          }
+          
+          // Determine modal type
+          if (dayName === 'Monday') {
+            setModalType('monday')
+            setModalDayKey(dayKey)
+            setModalDayName(dayName)
+            setDistanceKm('')
+            setShowModal(true)
+          } else if (dayName === 'Saturday' && detailLower.includes('long run')) {
+            setModalType('saturday')
+            setModalDayKey(dayKey)
+            setModalDayName(dayName)
+            setTimeHours('')
+            setTimeMinutes('')
+            setTimeSeconds('')
+            setShowModal(true)
+          } else if (detailLower.includes('race:')) {
+            setModalType('race')
+            setModalDayKey(dayKey)
+            setModalDayName(dayName)
+            setTimeHours('')
+            setTimeMinutes('')
+            setTimeSeconds('')
+            setShowModal(true)
+          } else {
+            // No modal needed, just mark as complete
+            saveCheckboxState(selectedWeek, dayKey, true, null)
+          }
+        }
+        
+        const handleModalSubmit = () => {
+          let completionData = null
+          
+          if (modalType === 'monday') {
+            const distance = parseFloat(distanceKm)
+            if (isNaN(distance) || distance <= 0) {
+              setDbError('Please enter a valid distance in KM')
+              return
+            }
+            completionData = { distanceKm: distance }
+          } else if (modalType === 'saturday' || modalType === 'race') {
+            const hours = parseInt(timeHours) || 0
+            const minutes = parseInt(timeMinutes) || 0
+            const seconds = parseInt(timeSeconds) || 0
+            
+            if (hours === 0 && minutes === 0 && seconds === 0) {
+              setDbError('Please enter a valid time')
+              return
+            }
+            
+            completionData = {
+              time: {
+                hours: hours,
+                minutes: minutes,
+                seconds: seconds
+              }
+            }
+          }
+          
+          saveCheckboxState(selectedWeek, modalDayKey, true, completionData)
+          setShowModal(false)
+          setModalType(null)
+          setModalDayKey(null)
+          setModalDayName(null)
         }
         
         // Parse day detail to extract heading and workout info
@@ -671,12 +767,12 @@ function App() {
                     
                     return (
                       <div key={index} className={`day-item ${colorClass}`}>
-                        <input
-                          type="checkbox"
-                          className="day-checkbox"
-                          checked={isChecked}
-                          onChange={() => handleDayCheck(day.key)}
-                        />
+                        <button
+                          className={`complete-btn ${isChecked ? 'completed' : ''}`}
+                          onClick={() => handleCompleteClick(day.name, day.key, day.detail)}
+                        >
+                          {isChecked ? 'Completed' : 'Complete'}
+                        </button>
                         <div className="day-content">
                           <h3 className="day-heading">{parsed.heading}</h3>
                           <span className={`day-workout ${isChecked ? 'completed' : ''}`}>
@@ -686,6 +782,81 @@ function App() {
                       </div>
                     )
                   })}
+                  
+                  {/* Modal */}
+                  {showModal && (
+                    <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h2>
+                          {modalType === 'monday' && `Enter Distance for ${modalDayName}`}
+                          {(modalType === 'saturday' || modalType === 'race') && `Enter Time for ${modalDayName}`}
+                        </h2>
+                        
+                        {modalType === 'monday' && (
+                          <div className="modal-input-group">
+                            <label>Distance (KM):</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              value={distanceKm}
+                              onChange={(e) => setDistanceKm(e.target.value)}
+                              placeholder="e.g., 5.5"
+                              autoFocus
+                            />
+                          </div>
+                        )}
+                        
+                        {(modalType === 'saturday' || modalType === 'race') && (
+                          <div className="modal-time-inputs">
+                            <div className="modal-input-group">
+                              <label>Hours:</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="23"
+                                value={timeHours}
+                                onChange={(e) => setTimeHours(e.target.value)}
+                                placeholder="0"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="modal-input-group">
+                              <label>Minutes:</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                value={timeMinutes}
+                                onChange={(e) => setTimeMinutes(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="modal-input-group">
+                              <label>Seconds:</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                value={timeSeconds}
+                                onChange={(e) => setTimeSeconds(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="modal-buttons">
+                          <button className="modal-btn modal-btn-cancel" onClick={() => setShowModal(false)}>
+                            Cancel
+                          </button>
+                          <button className="modal-btn modal-btn-submit" onClick={handleModalSubmit}>
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {dbError && (
                     <div className="error-message" style={{ marginTop: '16px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px', maxHeight: '300px', overflow: 'auto' }}>

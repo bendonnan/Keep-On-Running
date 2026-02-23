@@ -474,13 +474,35 @@ label {
   border-bottom: 1px solid #eee;
 }
 
-.day-checkbox {
-  width: 20px;
-  height: 20px;
+.complete-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #10b981;
+  background: white;
+  color: #10b981;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
   flex-shrink: 0;
   margin-top: 2px;
-  accent-color: #667eea;
+}
+
+.complete-btn:hover {
+  background: #10b981;
+  color: white;
+}
+
+.complete-btn.completed {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.complete-btn.completed:hover {
+  background: #059669;
+  border-color: #059669;
 }
 
 .day-content {
@@ -511,13 +533,137 @@ label {
 }
 
 .day-item.day-green {
-  background: #f0fdf4;
+  background: #d1fae5;
   border-left: 4px solid #10b981;
 }
 
 .day-item.day-orange {
-  background: #fff7ed;
+  background: #fed7aa;
   border-left: 4px solid #f97316;
+}
+
+.complete-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid #10b981;
+  background: white;
+  color: #10b981;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.complete-btn:hover {
+  background: #10b981;
+  color: white;
+}
+
+.complete-btn.completed {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.complete-btn.completed:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.modal-input-group {
+  margin-bottom: 16px;
+}
+
+.modal-input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-input-group input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.modal-input-group input:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.modal-time-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-btn-cancel {
+  background: #f3f4f6;
+  color: #333;
+}
+
+.modal-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.modal-btn-submit {
+  background: #10b981;
+  color: white;
+}
+
+.modal-btn-submit:hover {
+  background: #059669;
 }
 
 .week-notes {
