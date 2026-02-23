@@ -23,7 +23,7 @@ body {
 }
 
 .card {
-  background: #ffc0cb;
+  background: white;
   border-radius: 16px;
   padding: 32px;
   max-width: 500px;
@@ -459,10 +459,19 @@ label {
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid #eee;
+  margin: 0;
 }
 
 .day-item:last-child {
   border-bottom: none;
+}
+
+.day-item.day-green,
+.day-item.day-orange {
+  padding: 16px 0 16px 12px;
+  margin: 8px 0;
+  border-radius: 4px;
+  border-bottom: 1px solid #eee;
 }
 
 .day-checkbox {
@@ -477,26 +486,38 @@ label {
 .day-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
 }
 
-.day-name {
+.day-heading {
   font-size: 16px;
   font-weight: 600;
   color: #333;
+  margin: 0;
+  padding: 0;
 }
 
-.day-detail {
+.day-workout {
   font-size: 14px;
   color: #333;
   white-space: pre-line;
   line-height: 1.5;
 }
 
-.day-detail.completed {
+.day-workout.completed {
   text-decoration: line-through;
   color: #999;
+}
+
+.day-item.day-green {
+  background: #f0fdf4;
+  border-left: 4px solid #10b981;
+}
+
+.day-item.day-orange {
+  background: #fff7ed;
+  border-left: 4px solid #f97316;
 }
 
 .week-notes {

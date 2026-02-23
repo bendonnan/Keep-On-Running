@@ -260,20 +260,12 @@ const WEEK_TRAINING_DATA = {
   }
 }
 
-// Function to generate week ranges starting from Mon 23rd Feb
+// Function to generate week ranges starting from Mon 23rd Feb 2026
 const generateWeeks = () => {
   const weeks = []
-  const currentYear = new Date().getFullYear()
   
-  // Start date: Monday, February 23rd
-  let startDate = new Date(currentYear, 1, 23) // Month is 0-indexed, so 1 = February
-  
-  // If we're past Feb 23 this year, use next year
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  if (today > startDate) {
-    startDate = new Date(currentYear + 1, 1, 23)
-  }
+  // Start date: Monday, February 23rd, 2026 (matches training data year)
+  let startDate = new Date(2026, 1, 23) // Month is 0-indexed, so 1 = February
   
   // Ensure it's a Monday (day 1)
   const dayOfWeek = startDate.getDay()
@@ -283,12 +275,13 @@ const generateWeeks = () => {
     startDate.setDate(startDate.getDate() + diff)
   }
   
-  // Generate weeks for the rest of the year
-  const endOfYear = new Date(startDate.getFullYear(), 11, 31) // December 31st
+  // Generate weeks up to July 19th, 2026 (Run Melbourne race day)
+  // Use 2026 since that's the year in the training data
+  const endDate = new Date(2026, 6, 19) // July 19th, 2026 (month 6 = July)
   
   let currentWeekStart = new Date(startDate)
   
-  while (currentWeekStart <= endOfYear) {
+  while (currentWeekStart <= endDate) {
     const weekEnd = new Date(currentWeekStart)
     weekEnd.setDate(weekEnd.getDate() + 6) // Sunday (6 days after Monday)
     
@@ -618,6 +611,45 @@ function App() {
           saveCheckboxState(selectedWeek, dayKey, newValue)
         }
         
+        // Parse day detail to extract heading and workout info
+        const parseDayDetail = (detail) => {
+          const parts = detail.split(' - ')
+          if (parts.length >= 2) {
+            return {
+              heading: parts[0], // "Monday 23 Feb 2026"
+              workout: parts.slice(1).join(' - ') // Rest of the detail
+            }
+          }
+          return {
+            heading: detail,
+            workout: ''
+          }
+        }
+        
+        // Get color class for day
+        const getDayColorClass = (dayName, detail) => {
+          const detailLower = detail.toLowerCase()
+          if (dayName === 'Monday' || dayName === 'Wednesday' || dayName === 'Friday') {
+            return 'day-green'
+          }
+          if (dayName === 'Tuesday' || dayName === 'Thursday') {
+            return 'day-orange'
+          }
+          if (dayName === 'Saturday') {
+            if (detailLower.includes('long run')) {
+              return 'day-green'
+            }
+            return 'day-orange'
+          }
+          if (dayName === 'Sunday') {
+            if (detailLower.includes('race') || detailLower.includes('run')) {
+              return 'day-green'
+            }
+            return 'day-orange'
+          }
+          return ''
+        }
+        
         return (
           <div className="app">
             <div className="card">
@@ -633,11 +665,12 @@ function App() {
                 
                 <div className="week-details">
                   {days.map((day, index) => {
-                    // Use state (which is loaded from Supabase) as source of truth
                     const isChecked = checkedDays[day.key] === true
+                    const parsed = parseDayDetail(day.detail)
+                    const colorClass = getDayColorClass(day.name, day.detail)
                     
                     return (
-                      <div key={index} className="day-item">
+                      <div key={index} className={`day-item ${colorClass}`}>
                         <input
                           type="checkbox"
                           className="day-checkbox"
@@ -645,35 +678,20 @@ function App() {
                           onChange={() => handleDayCheck(day.key)}
                         />
                         <div className="day-content">
-                          <span className={`day-detail ${isChecked ? 'completed' : ''}`}>
-                            {day.detail}
+                          <h3 className="day-heading">{parsed.heading}</h3>
+                          <span className={`day-workout ${isChecked ? 'completed' : ''}`}>
+                            {parsed.workout}
                           </span>
                         </div>
                       </div>
                     )
                   })}
                   
-                  <div className="week-notes">
-                    <strong>NOTES:</strong> {trainingData.notes}
-                  </div>
-                  
                   {dbError && (
                     <div className="error-message" style={{ marginTop: '16px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px', maxHeight: '300px', overflow: 'auto' }}>
                       {dbError}
                     </div>
                   )}
-                  
-                  <div className="db-debug-info" style={{ marginTop: '16px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', fontSize: '12px', color: '#666' }}>
-                    {dbLoadTime && (
-                      <div>Loaded from DB at: {new Date(dbLoadTime).toLocaleString()}</div>
-                    )}
-                    {dbSaveTime && (
-                      <div>Last saved to DB at: {new Date(dbSaveTime).toLocaleString()}</div>
-                    )}
-                    {dbLoadTime && (
-                      <div>DB state version: {new Date(dbLoadTime).getTime()}</div>
-                    )}
-                  </div>
                 </div>
               </div>
 
