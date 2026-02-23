@@ -333,6 +333,9 @@ function App() {
   const [currentPage, setCurrentPage] = useState(null)
   const [selectedWeek, setSelectedWeek] = useState(null)
   const [checkedDays, setCheckedDays] = useState({})
+  const [dbLoadTime, setDbLoadTime] = useState(null)
+  const [dbSaveTime, setDbSaveTime] = useState(null)
+  const [dbError, setDbError] = useState(null)
 
   // Initialize device label
   useEffect(() => {
@@ -387,106 +390,158 @@ function App() {
 
   // Load checked days from Supabase when week is selected
   useEffect(() => {
-    if (selectedWeek && currentPage === 'Running Schedule' && deviceLabel) {
+    if (selectedWeek && currentPage === 'Running Schedule') {
       loadCheckboxStates(selectedWeek)
     } else if (!selectedWeek) {
       setCheckedDays({})
+      setDbLoadTime(null)
+      setDbError(null)
     }
-  }, [selectedWeek, currentPage, deviceLabel])
+  }, [selectedWeek, currentPage])
 
   const loadCheckboxStates = async (weekKey) => {
     if (!isOnline) {
-      // Fallback to localStorage when offline
-      const loaded = {}
-      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-      dayKeys.forEach(dayKey => {
-        const storageKey = `workout_${weekKey}_${dayKey}`
-        const value = localStorage.getItem(storageKey)
-        loaded[dayKey] = value === 'true'
-      })
-      setCheckedDays(loaded)
+      setDbError('Cannot load: You are offline. Checkbox states require internet connection.')
+      setCheckedDays({})
       return
     }
 
+    setDbError(null)
     try {
+      // Try to fetch the single row (id=1)
       const { data, error } = await supabase
-        .from('workout_checkboxes')
-        .select('day_key, checked')
-        .eq('week_key', weekKey)
+        .from('training_state')
+        .select('state, updated_at')
+        .eq('id', 1)
+        .single()
 
       if (error) {
-        console.error('Error loading checkboxes:', error)
-        // Fallback to localStorage
-        const loaded = {}
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-        dayKeys.forEach(dayKey => {
-          const storageKey = `workout_${weekKey}_${dayKey}`
-          const value = localStorage.getItem(storageKey)
-          loaded[dayKey] = value === 'true'
-        })
-        setCheckedDays(loaded)
+        // If row doesn't exist, create it with empty state
+        if (error.code === 'PGRST116') {
+          const initialState = {}
+          const { data: newData, error: insertError } = await supabase
+            .from('training_state')
+            .insert({
+              id: 1,
+              state: initialState,
+              updated_at: new Date().toISOString()
+            })
+            .select('state, updated_at')
+            .single()
+
+          if (insertError) {
+            setDbError(`Error creating state: ${insertError.message}`)
+            setCheckedDays({})
+            return
+          }
+
+          setCheckedDays(newData.state[weekKey] || {})
+          setDbLoadTime(newData.updated_at)
+        } else {
+          setDbError(`Error loading: ${error.message}`)
+          setCheckedDays({})
+        }
         return
       }
 
-      const loaded = {}
-      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-      dayKeys.forEach(dayKey => {
-        const dbEntry = data?.find(item => item.day_key === dayKey)
-        loaded[dayKey] = dbEntry?.checked === true
-        // Also sync to localStorage as backup
-        const storageKey = `workout_${weekKey}_${dayKey}`
-        if (dbEntry?.checked !== undefined) {
-          localStorage.setItem(storageKey, dbEntry.checked.toString())
-        }
-      })
-      setCheckedDays(loaded)
+      // Extract checkbox state for this week from the JSON
+      const weekState = data.state?.[weekKey] || {}
+      setCheckedDays(weekState)
+      setDbLoadTime(data.updated_at)
     } catch (err) {
+      setDbError(`Error loading: ${err.message}`)
+      setCheckedDays({})
       console.error('Error loading checkboxes:', err)
-      // Fallback to localStorage
-      const loaded = {}
-      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-      dayKeys.forEach(dayKey => {
-        const storageKey = `workout_${weekKey}_${dayKey}`
-        const value = localStorage.getItem(storageKey)
-        loaded[dayKey] = value === 'true'
-      })
-      setCheckedDays(loaded)
     }
   }
 
   const saveCheckboxState = async (weekKey, dayKey, checked) => {
-    // Update local state immediately
-    setCheckedDays(prev => ({
-      ...prev,
-      [dayKey]: checked
-    }))
-
-    // Save to localStorage as backup
-    const storageKey = `workout_${weekKey}_${dayKey}`
-    localStorage.setItem(storageKey, checked.toString())
-
-    // Save to Supabase if online
-    if (!isOnline || !deviceLabel) {
+    if (!isOnline) {
+      setDbError('Cannot save: You are offline. Checkbox states require internet connection.')
       return
     }
 
+    // Update local state immediately for UI responsiveness
+    const newWeekState = {
+      ...checkedDays,
+      [dayKey]: checked
+    }
+    setCheckedDays(newWeekState)
+
+    setDbError(null)
     try {
-      const { error } = await supabase
-        .from('workout_checkboxes')
+      // Fetch current state
+      const { data: currentData, error: fetchError } = await supabase
+        .from('training_state')
+        .select('state')
+        .eq('id', 1)
+        .single()
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        setDbError(`Error fetching state: ${fetchError.message}`)
+        // Revert local state
+        setCheckedDays(prev => ({
+          ...prev,
+          [dayKey]: !checked
+        }))
+        return
+      }
+
+      // Build new state object
+      const currentState = currentData?.state || {}
+      const newState = {
+        ...currentState,
+        [weekKey]: {
+          ...currentState[weekKey],
+          [dayKey]: checked
+        }
+      }
+
+      // Save entire state to database
+      const { data: savedData, error: saveError } = await supabase
+        .from('training_state')
         .upsert({
-          week_key: weekKey,
-          day_key: dayKey,
-          checked: checked,
-          updated_by: deviceLabel,
+          id: 1,
+          state: newState,
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'week_key,day_key'
+          onConflict: 'id'
         })
+        .select('updated_at')
+        .single()
 
-      if (error) {
-        console.error('Error saving checkbox:', error)
+      if (saveError) {
+        setDbError(`Error saving: ${saveError.message}`)
+        // Revert local state
+        setCheckedDays(prev => ({
+          ...prev,
+          [dayKey]: !checked
+        }))
+        return
+      }
+
+      // Success - update save time
+      setDbSaveTime(savedData.updated_at)
+      
+      // Re-fetch to confirm and get latest state (in case another device updated)
+      const { data: confirmData } = await supabase
+        .from('training_state')
+        .select('state, updated_at')
+        .eq('id', 1)
+        .single()
+
+      if (confirmData) {
+        const confirmedWeekState = confirmData.state?.[weekKey] || {}
+        setCheckedDays(confirmedWeekState)
+        setDbLoadTime(confirmData.updated_at)
       }
     } catch (err) {
+      setDbError(`Error saving: ${err.message}`)
+      // Revert local state
+      setCheckedDays(prev => ({
+        ...prev,
+        [dayKey]: !checked
+      }))
       console.error('Error saving checkbox:', err)
     }
   }
@@ -593,6 +648,24 @@ function App() {
                   
                   <div className="week-notes">
                     <strong>NOTES:</strong> {trainingData.notes}
+                  </div>
+                  
+                  {dbError && (
+                    <div className="error-message" style={{ marginTop: '16px' }}>
+                      {dbError}
+                    </div>
+                  )}
+                  
+                  <div className="db-debug-info" style={{ marginTop: '16px', padding: '12px', background: '#f8f9fa', borderRadius: '8px', fontSize: '12px', color: '#666' }}>
+                    {dbLoadTime && (
+                      <div>Loaded from DB at: {new Date(dbLoadTime).toLocaleString()}</div>
+                    )}
+                    {dbSaveTime && (
+                      <div>Last saved to DB at: {new Date(dbSaveTime).toLocaleString()}</div>
+                    )}
+                    {dbLoadTime && (
+                      <div>DB state version: {new Date(dbLoadTime).getTime()}</div>
+                    )}
                   </div>
                 </div>
               </div>
