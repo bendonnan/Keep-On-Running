@@ -408,35 +408,52 @@ function App() {
 
     setDbError(null)
     try {
-      // Load from existing workout_checkboxes table
+      // Load from app_state table - use training_status column to store JSON checkbox state
       const { data, error } = await supabase
-        .from('workout_checkboxes')
-        .select('day_key, checked, updated_at')
-        .eq('week_key', weekKey)
-        .order('updated_at', { ascending: false })
+        .from('app_state')
+        .select('training_status, updated_at')
+        .eq('id', 1)
+        .single()
 
       if (error) {
-        setDbError(`Error loading: ${error.message}`)
-        setCheckedDays({})
+        // If row doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          const { data: newData, error: insertError } = await supabase
+            .from('app_state')
+            .insert({
+              id: 1,
+              training_status: '{}',
+              updated_by: deviceLabel || 'unknown',
+              updated_at: new Date().toISOString()
+            })
+            .select('training_status, updated_at')
+            .single()
+
+          if (insertError) {
+            setDbError(`Error: ${insertError.message}`)
+            setCheckedDays({})
+            return
+          }
+
+          setCheckedDays({})
+          setDbLoadTime(newData.updated_at)
+        } else {
+          setDbError(`Error loading: ${error.message}`)
+          setCheckedDays({})
+        }
         return
       }
 
-      // Build state object from database results
-      const loaded = {}
-      let latestUpdate = null
-      const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-      
-      dayKeys.forEach(dayKey => {
-        const dbEntry = data?.find(item => item.day_key === dayKey)
-        loaded[dayKey] = dbEntry?.checked === true
-        if (dbEntry?.updated_at && (!latestUpdate || new Date(dbEntry.updated_at) > new Date(latestUpdate))) {
-          latestUpdate = dbEntry.updated_at
-        }
-      })
-      
-      setCheckedDays(loaded)
-      if (latestUpdate) {
-        setDbLoadTime(latestUpdate)
+      // Parse checkbox state from training_status JSON
+      try {
+        const checkboxData = JSON.parse(data.training_status || '{}')
+        const weekState = checkboxData[weekKey] || {}
+        setCheckedDays(weekState)
+        setDbLoadTime(data.updated_at)
+      } catch (parseError) {
+        // If not valid JSON, start fresh
+        setCheckedDays({})
+        setDbLoadTime(data.updated_at)
       }
     } catch (err) {
       setDbError(`Error loading: ${err.message}`)
@@ -459,24 +476,15 @@ function App() {
 
     setDbError(null)
     try {
-      // Save to existing workout_checkboxes table
-      const { data: savedData, error: saveError } = await supabase
-        .from('workout_checkboxes')
-        .upsert({
-          week_key: weekKey,
-          day_key: dayKey,
-          checked: checked,
-          updated_by: deviceLabel || 'unknown',
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'week_key,day_key'
-        })
-        .select('updated_at')
+      // Fetch current state
+      const { data: currentData, error: fetchError } = await supabase
+        .from('app_state')
+        .select('training_status')
+        .eq('id', 1)
         .single()
 
-      if (saveError) {
-        setDbError(`Error saving: ${saveError.message}`)
-        // Revert local state
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        setDbError(`Error fetching: ${fetchError.message}`)
         setCheckedDays(prev => ({
           ...prev,
           [dayKey]: !checked
@@ -484,32 +492,65 @@ function App() {
         return
       }
 
-      // Success - update save time
+      // Parse current checkbox data
+      let checkboxData = {}
+      try {
+        checkboxData = JSON.parse(currentData?.training_status || '{}')
+      } catch (e) {
+        checkboxData = {}
+      }
+
+      // Update checkbox state for this week
+      checkboxData[weekKey] = {
+        ...checkboxData[weekKey],
+        [dayKey]: checked
+      }
+
+      // Save back to database
+      const { data: savedData, error: saveError } = await supabase
+        .from('app_state')
+        .upsert({
+          id: 1,
+          training_status: JSON.stringify(checkboxData),
+          updated_by: deviceLabel || 'unknown',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        })
+        .select('updated_at')
+        .single()
+
+      if (saveError) {
+        setDbError(`Error saving: ${saveError.message}`)
+        setCheckedDays(prev => ({
+          ...prev,
+          [dayKey]: !checked
+        }))
+        return
+      }
+
+      // Success
       setDbSaveTime(savedData.updated_at)
       
-      // Re-fetch to confirm and get latest state (in case another device updated)
+      // Re-fetch to confirm
       const { data: confirmData } = await supabase
-        .from('workout_checkboxes')
-        .select('day_key, checked, updated_at')
-        .eq('week_key', weekKey)
+        .from('app_state')
+        .select('training_status, updated_at')
+        .eq('id', 1)
+        .single()
 
       if (confirmData) {
-        const loaded = {}
-        let latestUpdate = null
-        confirmData.forEach(item => {
-          loaded[item.day_key] = item.checked === true
-          if (item.updated_at && (!latestUpdate || new Date(item.updated_at) > new Date(latestUpdate))) {
-            latestUpdate = item.updated_at
-          }
-        })
-        setCheckedDays(loaded)
-        if (latestUpdate) {
-          setDbLoadTime(latestUpdate)
+        try {
+          const confirmedCheckboxData = JSON.parse(confirmData.training_status || '{}')
+          const confirmedWeekState = confirmedCheckboxData[weekKey] || {}
+          setCheckedDays(confirmedWeekState)
+          setDbLoadTime(confirmData.updated_at)
+        } catch (e) {
+          setCheckedDays({})
         }
       }
     } catch (err) {
       setDbError(`Error saving: ${err.message}`)
-      // Revert local state
       setCheckedDays(prev => ({
         ...prev,
         [dayKey]: !checked
