@@ -416,6 +416,34 @@ function App() {
         .single()
 
       if (error) {
+        // If table doesn't exist, show helpful error with SQL
+        if (error.message?.includes('schema cache') || error.message?.includes('does not exist')) {
+          const sqlCode = `CREATE TABLE IF NOT EXISTS public.training_state (
+  id INTEGER PRIMARY KEY,
+  state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.training_state ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anonymous read for id=1"
+ON public.training_state FOR SELECT TO anon USING (id = 1);
+
+CREATE POLICY "Allow anonymous insert for id=1"
+ON public.training_state FOR INSERT TO anon WITH CHECK (id = 1);
+
+CREATE POLICY "Allow anonymous update for id=1"
+ON public.training_state FOR UPDATE TO anon USING (id = 1) WITH CHECK (id = 1);
+
+INSERT INTO public.training_state (id, state, updated_at)
+VALUES (1, '{}'::jsonb, NOW())
+ON CONFLICT (id) DO NOTHING;`
+          
+          setDbError(`Database table missing. Go to Supabase SQL Editor and run this SQL:\n\n${sqlCode}`)
+          setCheckedDays({})
+          return
+        }
+        
         // If row doesn't exist, create it with empty state
         if (error.code === 'PGRST116') {
           const initialState = {}
@@ -449,7 +477,31 @@ function App() {
       setCheckedDays(weekState)
       setDbLoadTime(data.updated_at)
     } catch (err) {
-      setDbError(`Error loading: ${err.message}`)
+      if (err.message?.includes('schema cache') || err.message?.includes('does not exist')) {
+        const sqlCode = `CREATE TABLE IF NOT EXISTS public.training_state (
+  id INTEGER PRIMARY KEY,
+  state JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.training_state ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anonymous read for id=1"
+ON public.training_state FOR SELECT TO anon USING (id = 1);
+
+CREATE POLICY "Allow anonymous insert for id=1"
+ON public.training_state FOR INSERT TO anon WITH CHECK (id = 1);
+
+CREATE POLICY "Allow anonymous update for id=1"
+ON public.training_state FOR UPDATE TO anon USING (id = 1) WITH CHECK (id = 1);
+
+INSERT INTO public.training_state (id, state, updated_at)
+VALUES (1, '{}'::jsonb, NOW())
+ON CONFLICT (id) DO NOTHING;`
+        setDbError(`Database table missing. Go to Supabase SQL Editor and run this SQL:\n\n${sqlCode}`)
+      } else {
+        setDbError(`Error loading: ${err.message}`)
+      }
       setCheckedDays({})
       console.error('Error loading checkboxes:', err)
     }
@@ -651,7 +703,7 @@ function App() {
                   </div>
                   
                   {dbError && (
-                    <div className="error-message" style={{ marginTop: '16px' }}>
+                    <div className="error-message" style={{ marginTop: '16px', whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '11px', maxHeight: '300px', overflow: 'auto' }}>
                       {dbError}
                     </div>
                   )}
