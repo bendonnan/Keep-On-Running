@@ -337,13 +337,20 @@ function App() {
   const [dbSaveTime, setDbSaveTime] = useState(null)
   const [dbError, setDbError] = useState(null)
 
-  // Initialize device label
+  // Initialize device label and check for target page after refresh
   useEffect(() => {
     const stored = localStorage.getItem('deviceLabel')
     if (stored) {
       setDeviceLabel(stored)
     } else {
       setShowLabelPrompt(true)
+    }
+
+    // Check if we should navigate to a page after refresh
+    const targetPage = localStorage.getItem('targetPage')
+    if (targetPage) {
+      localStorage.removeItem('targetPage')
+      setCurrentPage(targetPage)
     }
   }, [])
 
@@ -372,7 +379,8 @@ function App() {
   }
 
   const handleMenuClick = (menuItem) => {
-    // Refresh the app first, then navigate
+    // Store target page in localStorage, then refresh
+    localStorage.setItem('targetPage', menuItem)
     window.location.reload()
   }
 
